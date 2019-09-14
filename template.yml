@@ -1,0 +1,65 @@
+Parameters:
+  S3Bucket:
+    Type: String
+  S3Prefix:
+    Type: String
+  DroneServer:
+    Type: String
+  SSMPath:
+    Type: String
+
+Resources:
+  DroneMetricLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        S3Bucket: !Sub ${S3Bucket}
+        S3Key: !Sub ${S3Prefix}/deployment.zip
+      Environment:
+        Variables:
+          DRONE_SERVER: !Ref DroneServer #https://drone.kloudcover.com
+          SSM_KEY: !Ref SSMPath #/drone/production/cloudwatch
+
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Role: !GetAtt CronLambdaRole.Arn
+      Runtime: "python3.6"
+      Timeout: 300
+
+  CronStats:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: cron for drone stats
+      ScheduleExpression: rate(60 minutes)
+      Targets:
+        - Id: drone
+          Arn: !GetAtt DroneMetricLambda.Arn
+
+  DronePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt CronStats.Arn
+      FunctionName: !GetAtt DroneMetricLambda.Arn
+      Action: lambda:InvokeFunction
+
+  CronLambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service: "lambda.amazonaws.com"
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                - "logs:*"
+                Effect: Allow
+                Resource: "arn:aws:logs:*:*:*"
+              - Action:
+                  - "cloudwatch:PutMetricData"
+                Effect: Allow
+                Resource: "*"

@@ -1,0 +1,16 @@
+---
+kind: pipeline
+name: build-lambda
+
+steps:
+  - name: build_lambda
+    image: ktruckenmiller/lambda-packager:python
+    settings:
+      code_dir: src
+
+  - name: deploy
+    image: ktruckenmiller/ansible
+    environment:
+      AWS_DEFAULT_REGION: us-west-2
+    commands:
+     - ansible-playbook -i ansible_connection=localhost deploy.yml -e GIT_COMMIT=${DRONE_COMMIT} -e environ=pr -vvv

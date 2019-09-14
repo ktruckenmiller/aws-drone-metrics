@@ -1,0 +1,32 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    stackname: "{{environ}}-drone-metrics"
+    region: us-west-2
+    drone_server: https://drone.kloudcover.com
+    ssm_path: /drone/production/cloudwatch
+    s3_bucket: lambda-deploys
+
+  tasks:
+    - set_fact:
+        s3_path: drone_metrics/{{GIT_COMMIT}}"
+        
+    - name: package lambda
+      aws_s3:
+        bucket: lambda-deploys
+        mode: put
+        src: deployment.zip
+        object: "{{s3_path}}/deployment.zip"
+
+    - name: long lived resources
+      cloudformation:
+        stack_name: "{{stackname}}-long-lived"
+        state: present
+        region: "{{region}}"
+        template: long_lived.yml
+        template_parameters:
+          S3Bucket: "{{s3_bucket}}"
+          S3Prefix: "{{s3_path}}"
+          DroneServer: "{{drone_server}}"
+          SSMPath: "{{ssm_path}}"
