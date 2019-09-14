@@ -17,8 +17,8 @@ Resources:
         S3Key: !Sub ${S3Prefix}/deployment.zip
       Environment:
         Variables:
-          DRONE_SERVER: !Ref DroneServer #https://drone.kloudcover.com
-          SSM_KEY: !Ref SSMPath #/drone/production/cloudwatch
+          DRONE_SERVER: !Ref DroneServer
+          SSM_KEY: !Ref SSMPath
 
       Handler: index.lambda_handler
       MemorySize: 128
@@ -53,7 +53,8 @@ Resources:
             Principal:
               Service: "lambda.amazonaws.com"
       Policies:
-        - PolicyDocument:
+        - PolicyName: logs-and-cw
+          PolicyDocument:
             Statement:
               - Action:
                 - "logs:*"
