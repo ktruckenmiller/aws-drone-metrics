@@ -11,7 +11,7 @@
   tasks:
     - set_fact:
         s3_path: drone_metrics/{{GIT_COMMIT}}"
-        
+
     - name: package lambda
       aws_s3:
         bucket: lambda-deploys
@@ -24,7 +24,7 @@
         stack_name: "{{stackname}}-long-lived"
         state: present
         region: "{{region}}"
-        template: long_lived.yml
+        template: template.yml
         template_parameters:
           S3Bucket: "{{s3_bucket}}"
           S3Prefix: "{{s3_path}}"
