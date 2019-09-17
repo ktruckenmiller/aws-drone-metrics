@@ -67,4 +67,4 @@ Resources:
               - Action:
                   - "ssm:GetParameter"
                 Effect: Allow
-                Resource: !Sub arn:aws:ssm:*:${AccountId}:parameter/production/drone/metric
+                Resource: !Sub arn:aws:ssm:*:${AccountId}:parameter/production/drone/cloudwatch
